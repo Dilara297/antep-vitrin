@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Antep Yöresel Ürünler</title>
+    <!-- Bootstrap CSS (Hazır tasarım kütüphanesi) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f9f9f9; }
+        .navbar-brand { font-weight: bold; color: #b71c1c !important; font-size: 1.5rem; }
+        .btn-antep { background-color: #b71c1c; color: white; }
+        .btn-antep:hover { background-color: #7f0000; color: white; }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm mb-4 py-3">
+        <div class="container">
+            <a class="navbar-brand" href="/">🌶️ Antep Dükkanı</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        {% block content %}
+        <!-- Diğer sayfaların içeriği buraya gelecek -->
+        {% endblock %}
+    </div>
+</body>
+</html>

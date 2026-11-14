@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row">
+    <!-- Sol Taraf: Kategoriler -->
+    <div class="col-md-3 mb-4">
+        <div class="list-group shadow-sm">
+            <a href="/" class="list-group-item list-group-item-action active" style="background-color: #b71c1c; border-color: #b71c1c;">
+                Tüm Ürünler
+            </a>
+            {% for kategori in kategoriler %}
+            <a href="#" class="list-group-item list-group-item-action">{{ kategori.isim }}</a>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Sağ Taraf: Ürün Vitrini -->
+    <div class="col-md-9">
+        <div class="row row-cols-1 row-cols-md-3 g-4">
+            {% for urun in urunler %}
+            <div class="col">
+                <div class="card h-100 shadow-sm border-0">
+                    {% if urun.gorsel %}
+                    <img src="{{ urun.gorsel.url }}" class="card-img-top" alt="{{ urun.isim }}" style="height: 200px; object-fit: cover;">
+                    {% endif %}
+                    <div class="card-body">
+                        <h5 class="card-title">{{ urun.isim }}</h5>
+                        <p class="card-text text-muted small mb-1">{{ urun.kategori.isim }}</p>
+                        <h6 class="text-success fw-bold fs-5">{{ urun.fiyat }} ₺</h6>
+                    </div>
+                    <div class="card-footer bg-white border-0 pb-3">
+<a href="{% url 'urun_detay' urun.slug %}" class="btn btn-antep w-100">İncele</a>                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="col-12">
+                <div class="alert alert-warning">Henüz vitrine ürün eklenmemiş.</div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

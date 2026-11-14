@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row mt-4">
+    <div class="col-md-6 mb-4">
+        {% if urun.gorsel %}
+        <img src="{{ urun.gorsel.url }}" class="img-fluid rounded shadow-sm w-100" style="max-height: 500px; object-fit: cover;" alt="{{ urun.isim }}">
+        {% endif %}
+    </div>
+    <div class="col-md-6">
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/" class="text-decoration-none text-muted">Ana Sayfa</a></li>
+            <li class="breadcrumb-item"><a href="#" class="text-decoration-none text-muted">{{ urun.kategori.isim }}</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ urun.isim }}</li>
+          </ol>
+        </nav>
+        
+        <h2 class="fw-bold">{{ urun.isim }}</h2>
+        <h3 class="text-success fw-bold mb-4">{{ urun.fiyat }} ₺</h3>
+        
+        <div class="mb-4">
+            <h5>Ürün Hakkında</h5>
+            <!-- Admin panelinden girilen açıklama satır atlamalarıyla görünsün diye linebreaks filtresi kullandık -->
+            <p class="text-secondary">{{ urun.aciklama|linebreaks }}</p> 
+        </div>
+        
+        <div class="d-grid gap-2 d-md-flex mt-4">
+            <!-- Bu buton şimdilik sadece görsel mockup -->
+            <button class="btn btn-success btn-lg px-4" type="button">🛒 Sepete Ekle</button>
+            <a href="/" class="btn btn-outline-secondary btn-lg px-4">Geri Dön</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
