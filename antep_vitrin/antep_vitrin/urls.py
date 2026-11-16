@@ -7,4 +7,5 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('vitrin.urls')),
     path('sepet/', include('sepet.urls')),
+    path('hesap/', include('hesap.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

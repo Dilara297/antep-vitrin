@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-5">
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-5">
+                <h3 class="card-title text-center mb-4 fw-bold text-secondary">👋 Giriş Yap</h3>
+                <form method="POST">
+                    {% csrf_token %}
+                    <!-- Django'nun hazır formunu p etiketleri içinde render ediyoruz -->
+                    {{ form.as_p }}
+                    <button type="submit" class="btn btn-antep w-100 btn-lg mt-3 fw-bold">Giriş Yap</button>
+                </form>
+                <div class="text-center mt-4">
+                    <small class="text-muted">Hesabın yok mu? <a href="{% url 'kayit_ol' %}" class="text-decoration-none text-danger fw-bold">Kayıt Ol</a></small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
