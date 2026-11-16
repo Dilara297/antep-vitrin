@@ -3,6 +3,7 @@ from django.shortcuts import get_object_or_404
 from vitrin.models import Urun
 from .models import Sepet, SepetUrunu
 from django.db import transaction
+from django.shortcuts import render
 
 def sepete_ekle(request, urun_id):
     # 1. Hangi yöresel ürün eklenecek buluyoruz
@@ -31,41 +32,36 @@ def sepete_ekle(request, urun_id):
     })
     
 def sepet_detay(request):
-    # 1. Önce kullanıcının sepetini buluyoruz (Üye mi yoksa misafir mi kontrolüyle)
     if request.user.is_authenticated:
         sepet = Sepet.objects.filter(user=request.user).first()
     else:
         session_id = request.session.session_key
         sepet = Sepet.objects.filter(session_id=session_id, user=None).first()
         
-    # 2. Sepet hiç oluşmamışsa veya içi boşsa
     if not sepet or not sepet.urunler.exists():
-        return JsonResponse({
-            'mesaj': 'Sepetiniz şu an boş.', 
-            'urunler': [], 
-            'genel_toplam': 0
-        })
+        return render(request, 'sepet/sepet_detay.html', {'urunler': [], 'genel_toplam': 0})
         
-    # 3. Sepet doluysa içindeki ürünleri döngüye sokup hesap kitap yapıyoruz
     urunler_listesi = []
     genel_toplam = 0
     
     for kalem in sepet.urunler.all():
-        kalem_toplam = kalem.toplam_fiyat_getir() # models.py'de yazdığımız fonksiyon çalışıyor
+        kalem_toplam = kalem.toplam_fiyat_getir()
         genel_toplam += kalem_toplam
         
         urunler_listesi.append({
+            'id': kalem.urun.id, # Silme işlemi için ID gerekli
             'urun_ismi': kalem.urun.isim,
             'adet': kalem.adet,
             'birim_fiyat': kalem.urun.fiyat,
-            'kalem_toplam': kalem_toplam
+            'kalem_toplam': kalem_toplam,
+            'gorsel_url': kalem.urun.gorsel.url if kalem.urun.gorsel else None
         })
         
-    return JsonResponse({
-        'mesaj': 'Sepet detayları başarıyla getirildi.',
+    context = {
         'urunler': urunler_listesi,
         'genel_toplam': genel_toplam
-    })
+    }
+    return render(request, 'sepet/sepet_detay.html', context)
     
 def sepetten_cikar(request, urun_id):
     # 1. Sepeti bul (Giriş yapan veya misafir)

@@ -29,7 +29,15 @@
                         <h6 class="text-success fw-bold fs-5">{{ urun.fiyat }} ₺</h6>
                     </div>
                     <div class="card-footer bg-white border-0 pb-3">
-<a href="{% url 'urun_detay' urun.slug %}" class="btn btn-antep w-100">İncele</a>                    </div>
+                        <!-- Butonları alt alta şık bir şekilde diziyoruz -->
+                        <div class="d-grid gap-2">
+                            <a href="{% url 'urun_detay' urun.slug %}" class="btn btn-outline-secondary btn-sm">İncele</a>
+                            <!-- Butona data-urun-id veriyoruz ki JS hangi ürünü ekleyeceğini bilsin -->
+                            <button class="btn btn-antep btn-sm sepete-ekle-btn" data-urun-id="{{ urun.id }}">
+                                🛒 Sepete Ekle
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
             {% empty %}
@@ -40,4 +48,23 @@
         </div>
     </div>
 </div>
+
+<!-- JavaScript ile arka plandaki JSON uç noktamıza sessizce istek atıyoruz -->
+<script>
+    document.querySelectorAll('.sepete-ekle-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            // Tıklanan butonun içindeki ürün ID'sini al
+            const urunId = this.getAttribute('data-urun-id');
+            
+            // Backend'e Fetch API ile istek gönder (Sayfa yenilenmez)
+            fetch(`/sepet/ekle/${urunId}/`)
+                .then(response => response.json())
+                .then(data => {
+                    // Backend'den gelen JSON mesajını kullanıcıya göster
+                    alert(data.mesaj + " (Toplam adet: " + data.sepetteki_adet + ")");
+                })
+                .catch(error => console.error('Hata:', error));
+        });
+    });
+</script>
 {% endblock %}
