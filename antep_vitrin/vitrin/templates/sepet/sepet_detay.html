@@ -69,20 +69,59 @@
 </div>
 {% endif %}
 
+<!-- Silme Onay Modalı (Düzenin dışına, en alta alındı) -->
+<div class="modal fade" id="silOnayModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header bg-danger text-white border-0">
+        <h5 class="modal-title fw-bold">🗑️ Sepetten Çıkar</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Kapat"></button>
+      </div>
+      <div class="modal-body fs-5 py-4 text-center text-secondary">
+        Bu ürünü sepetten çıkarmak veya adedini azaltmak istediğinize emin misiniz?
+      </div>
+      <div class="modal-footer border-0 d-flex justify-content-center pb-4">
+        <button type="button" class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">İptal</button>
+        <button type="button" class="btn btn-danger px-4 fw-bold" id="modalOnayBtn">Evet, Çıkar</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %} 
+
+{% block extra_js %}
 <script>
-    // 1. Ürün Silme / Azaltma İşlemi
+    // 1. Ürün Silme / Azaltma İşlemi (Modal ile)
+    let silinecekUrunId = null;
+    
+    // Sayfa yüklendiğinde Modal'ı tanımla
+    const silOnayModal = new bootstrap.Modal(document.getElementById('silOnayModal'));
+
+    // Sil butonuna basıldığında sadece Modalı aç ve ID'yi hafızaya al
     document.querySelectorAll('.sepetten-cikar-btn').forEach(button => {
         button.addEventListener('click', function() {
-            const urunId = this.getAttribute('data-urun-id');
-            // Arka plandaki API'ye istek at
-            fetch(`/sepet/cikar/${urunId}/`)
-                .then(response => response.json())
-                .then(data => {
-                    // Sayfayı yenileyerek güncel fiyatları ve adetleri göster
-                    window.location.reload(); 
-                })
-                .catch(error => console.error('Hata:', error));
+            silinecekUrunId = this.getAttribute('data-urun-id');
+            silOnayModal.show();
         });
+    });
+
+    // Modal içindeki Kırmızı "Evet, Çıkar" butonuna basıldığında asıl API isteğini at
+    document.getElementById('modalOnayBtn').addEventListener('click', function() {
+        if (!silinecekUrunId) return;
+        
+        silOnayModal.hide(); // Modalı kapat
+
+        fetch(`/sepet/cikar/${silinecekUrunId}/`)
+            .then(response => response.json())
+            .then(data => {
+                if (typeof bildirimGoster === 'function') {
+                    bildirimGoster(data.mesaj, 'bg-danger');
+                    setTimeout(() => { window.location.reload(); }, 1500);
+                } else {
+                    window.location.reload();
+                }
+            })
+            .catch(error => console.error('Hata:', error));
     });
 
     // 2. Siparişi Tamamlama İşlemi (Transaction atomic yapımızı tetikler)

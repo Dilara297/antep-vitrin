@@ -44,7 +44,7 @@
             fetch(`/sepet/ekle/${urunId}/`)
                 .then(response => response.json())
                 .then(data => {
-                    alert(data.mesaj + " (Toplam adet: " + data.sepetteki_adet + ")");
+                    bildirimGoster(`${data.mesaj} (Sepette: ${data.sepetteki_adet} adet)`);
                 })
                 .catch(error => console.error('Hata:', error));
         });

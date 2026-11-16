@@ -31,5 +31,36 @@
         <!-- Diğer sayfaların içeriği buraya gelecek -->
         {% endblock %}
     </div>
+    <!-- Toast (Bildirim) Konteyneri -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1055;">
+        <div id="sistemBildirimi" class="toast align-items-center text-white bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body fw-bold" id="bildirimMesaji">
+                    İşlem başarılı!
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Kapat"></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS  -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Her sayfada kullanabileceğimiz global bildirim fonksiyonu -->
+    <script>
+        function bildirimGoster(mesaj, tip = 'bg-success') {
+            const toastElement = document.getElementById('sistemBildirimi');
+            const mesajElement = document.getElementById('bildirimMesaji');
+            
+            // Rengi ayarla (başarılıysa yeşil bg-success, hataysa kırmızı bg-danger)
+            toastElement.className = `toast align-items-center text-white border-0 ${tip}`;
+            mesajElement.textContent = mesaj;
+            
+            const toast = new bootstrap.Toast(toastElement);
+            toast.show();
+        }
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
 </body>
 </html>

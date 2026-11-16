@@ -61,7 +61,7 @@
                 .then(response => response.json())
                 .then(data => {
                     // Backend'den gelen JSON mesajını kullanıcıya göster
-                    alert(data.mesaj + " (Toplam adet: " + data.sepetteki_adet + ")");
+                    bildirimGoster(`${data.mesaj} (Sepette: ${data.sepetteki_adet} adet)`);
                 })
                 .catch(error => console.error('Hata:', error));
         });
