@@ -6,6 +6,7 @@ from django.db import transaction
 from django.contrib.auth.decorators import login_required
 from vitrin.models import Urun
 from .models import Sepet, SepetUrunu, Siparis, SiparisUrunu
+from hesap.models import Profil
 
 def sepete_ekle(request, urun_id):
     if not request.user.is_authenticated:
@@ -27,9 +28,15 @@ def sepete_ekle(request, urun_id):
 @login_required(login_url='giris_yap')
 def sepet_detay(request):
     sepet = Sepet.objects.filter(user=request.user).first()
+    profil_obj = Profil.objects.filter(user=request.user).first()
+    kayitli_adres = profil_obj.adres if profil_obj and profil_obj.adres else ''
         
     if not sepet or not sepet.urunler.exists():
-        return render(request, 'sepet/sepet_detay.html', {'urunler': [], 'genel_toplam': 0})
+        return render(request, 'sepet/sepet_detay.html', {
+            'urunler': [],
+            'genel_toplam': 0,
+            'kayitli_adres': kayitli_adres
+        })
         
     urunler_listesi = []
     genel_toplam = 0
@@ -49,7 +56,8 @@ def sepet_detay(request):
         
     return render(request, 'sepet/sepet_detay.html', {
         'urunler': urunler_listesi,
-        'genel_toplam': genel_toplam
+        'genel_toplam': genel_toplam,
+        'kayitli_adres': kayitli_adres
     })
 
 def sepetten_cikar(request, urun_id):

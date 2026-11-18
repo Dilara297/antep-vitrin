@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="text-secondary mb-0">👤 Profilim</h2>
+    <a href="/" class="btn btn-outline-secondary btn-sm fw-bold">← Ana Sayfaya Dön</a>
+</div>
+
+{% if messages %}
+    {% for message in messages %}
+    <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Kapat"></button>
+    </div>
+    {% endfor %}
+{% endif %}
+
+<div class="row">
+    <!-- Sol Taraf: Kullanıcı Bilgileri ve Kayıtlı Adres -->
+    <div class="col-md-5 mb-4">
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-4">
+                <h5 class="card-title fw-bold text-secondary border-bottom pb-2 mb-4">Hesap & Teslimat Bilgileri</h5>
+                <form method="POST">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label small text-muted fw-bold">Kullanıcı Adı</label>
+                        <input type="text" class="form-control bg-light" value="{{ user.username }}" disabled>
+                    </div>
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <label class="form-label small text-muted fw-bold">Ad</label>
+                            <input type="text" name="first_name" class="form-control" value="{{ user.first_name }}">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small text-muted fw-bold">Soyad</label>
+                            <input type="text" name="last_name" class="form-control" value="{{ user.last_name }}">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small text-muted fw-bold">E-posta</label>
+                        <input type="email" name="email" class="form-control" value="{{ user.email }}">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small text-muted fw-bold">Telefon</label>
+                        <input type="text" name="telefon" class="form-control" placeholder="05XX XXX XX XX" value="{{ profil.telefon|default:'' }}">
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label small text-muted fw-bold">Kayıtlı Teslimat Adresi</label>
+                        <textarea name="adres" class="form-control" rows="3" placeholder="Açık adresinizi kaydedin, ödeme ekranında otomatik gelsin...">{{ profil.adres|default:'' }}</textarea>
+                    </div>
+                    <button type="submit" class="btn btn-antep w-100 fw-bold">Bilgileri Kaydet</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sağ Taraf: Tamamlanan Geçmiş Siparişler -->
+    <div class="col-md-7">
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-4">
+                    <h5 class="card-title fw-bold text-secondary mb-0">✅ Tamamlanan Siparişler</h5>
+                    <a href="{% url 'siparislerim' %}" class="btn btn-outline-dark btn-sm">Tüm Siparişler</a>
+                </div>
+
+                {% if tamamlanan_siparisler %}
+                    {% for siparis in tamamlanan_siparisler %}
+                    <div class="border rounded p-3 mb-3 bg-light">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="fw-bold">Sipariş #{{ siparis.id }}</span>
+                            <span class="badge bg-success">Teslim Edildi</span>
+                        </div>
+                        <div class="small text-muted mb-2">
+                            {{ siparis.olusturulma_tarihi|date:"d.m.Y H:i" }} • {{ siparis.kargo_firmasi }} ({{ siparis.kargo_takip_no }})
+                        </div>
+                        <ul class="list-unstyled small mb-2">
+                            {% for kalem in siparis.urunler.all %}
+                            <li>• {{ kalem.adet }}x {{ kalem.urun.isim }} ({{ kalem.kalem_toplam_getir }} ₺)</li>
+                            {% endfor %}
+                        </ul>
+                        <div class="text-end fw-bold text-success">Toplam: {{ siparis.odenen_tutar }} ₺</div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-muted text-center py-4 mb-0">Henüz teslim edilmiş bir siparişiniz bulunmuyor.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
