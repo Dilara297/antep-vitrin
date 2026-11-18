@@ -1,8 +1,10 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<h2 class="mb-4 text-secondary">📦 Siparişlerim ve Kargo Takibi</h2>
-
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="text-secondary mb-0">📦 Siparişlerim ve Kargo Takibi</h2>
+    <a href="/" class="btn btn-outline-secondary btn-sm fw-bold">← Ana Sayfaya Dön</a>
+</div>
 {% if siparisler %}
     {% for siparis in siparisler %}
     <div class="card shadow-sm border-0 mb-4">

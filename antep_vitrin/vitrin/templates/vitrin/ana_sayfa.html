@@ -5,11 +5,13 @@
     <!-- Sol Taraf: Kategoriler -->
     <div class="col-md-3 mb-4">
         <div class="list-group shadow-sm">
-            <a href="/" class="list-group-item list-group-item-action active" style="background-color: #b71c1c; border-color: #b71c1c;">
+            <a href="/" class="list-group-item list-group-item-action {% if not secili_kategori_id %}active{% endif %}" {% if not secili_kategori_id %}style="background-color: #b71c1c; border-color: #b71c1c;"{% endif %}>
                 Tüm Ürünler
             </a>
             {% for kategori in kategoriler %}
-            <a href="#" class="list-group-item list-group-item-action">{{ kategori.isim }}</a>
+            <a href="/?kategori={{ kategori.id }}" class="list-group-item list-group-item-action {% if secili_kategori_id == kategori.id %}active{% endif %}" {% if secili_kategori_id == kategori.id %}style="background-color: #b71c1c; border-color: #b71c1c;"{% endif %}>
+                {{ kategori.isim }}
+            </a>
             {% endfor %}
         </div>
     </div>

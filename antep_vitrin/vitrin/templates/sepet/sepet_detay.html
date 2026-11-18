@@ -1,8 +1,10 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<h2 class="mb-4 text-secondary">🛒 Alışveriş Sepetim</h2>
-
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="text-secondary mb-0">🛒 Alışveriş Sepetim</h2>
+    <a href="/" class="btn btn-outline-secondary btn-sm fw-bold">← Alışverişe Dön</a>
+</div>
 {% if urunler %}
 <div class="row">
     <!-- Sol Taraf: Sepetteki Ürünler Tablosu -->
@@ -86,16 +88,16 @@
             <h6 class="fw-bold text-secondary mb-3">💳 Kart Bilgileri (Simülasyon)</h6>
             <div class="row g-3">
                 <div class="col-12">
-                    <input type="text" class="form-control" placeholder="Kart Üzerindeki İsim" required>
+                    <input type="text" id="kartIsim" class="form-control" placeholder="Kart Üzerindeki İsim" pattern="[A-Za-zÇĞİÖŞÜçğıöşü\s]{3,}" title="Sadece harf giriniz (en az 3 karakter)" required>
                 </div>
                 <div class="col-12">
-                    <input type="text" class="form-control" placeholder="Kart Numarası (Örn: 4543 **** **** ****)" required>
+                    <input type="text" id="kartNo" class="form-control" placeholder="0000 0000 0000 0000" maxlength="19" pattern="\d{4} \d{4} \d{4} \d{4}" title="16 haneli kart numarası giriniz" required>
                 </div>
                 <div class="col-6">
-                    <input type="text" class="form-control" placeholder="Ay/Yıl (MM/YY)" required>
+                    <input type="text" id="kartTarih" class="form-control" placeholder="AA/YY (Örn: 08/28)" maxlength="5" pattern="(0[1-9]|1[0-2])\/\d{2}" title="Geçerli bir ay/yıl giriniz (Örn: 05/28)" required>
                 </div>
                 <div class="col-6">
-                    <input type="text" class="form-control" placeholder="CVV" required>
+                    <input type="text" id="kartCvv" class="form-control" placeholder="CVV (3 hane)" maxlength="3" pattern="\d{3}" title="3 haneli güvenlik kodunu giriniz" required>
                 </div>
             </div>
         </form>
@@ -130,6 +132,37 @@
 
 {% block extra_js %}
 <script>
+    // Kart Alanları Anlık Doğrulama ve Formatlama
+    const kartNoInput = document.getElementById('kartNo');
+    const kartTarihInput = document.getElementById('kartTarih');
+    const kartCvvInput = document.getElementById('kartCvv');
+    const kartIsimInput = document.getElementById('kartIsim');
+
+    if (kartNoInput) {
+        kartNoInput.addEventListener('input', function(e) {
+            let val = e.target.value.replace(/\D/g, '').substring(0, 16);
+            e.target.value = val.replace(/(\d{4})(?=\d)/g, '$1 ');
+        });
+    }
+    if (kartTarihInput) {
+        kartTarihInput.addEventListener('input', function(e) {
+            let val = e.target.value.replace(/\D/g, '').substring(0, 4);
+            if (val.length >= 3) {
+                val = val.substring(0, 2) + '/' + val.substring(2);
+            }
+            e.target.value = val;
+        });
+    }
+    if (kartCvvInput) {
+        kartCvvInput.addEventListener('input', function(e) {
+            e.target.value = e.target.value.replace(/\D/g, '').substring(0, 3);
+        });
+    }
+    if (kartIsimInput) {
+        kartIsimInput.addEventListener('input', function(e) {
+            e.target.value = e.target.value.replace(/[^A-Za-zÇĞİÖŞÜçğıöşü\s]/g, '');
+        });
+    }
     // 1. Ürün Silme / Azaltma İşlemi (Modal ile)
     let silinecekUrunId = null;
     
