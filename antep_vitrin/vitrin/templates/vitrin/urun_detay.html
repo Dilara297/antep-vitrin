@@ -41,10 +41,14 @@
         button.addEventListener('click', function() {
             const urunId = this.getAttribute('data-urun-id');
             
-            fetch(`/sepet/ekle/${urunId}/`)
+           fetch(`/sepet/ekle/${urunId}/`)
                 .then(response => response.json())
                 .then(data => {
-                    bildirimGoster(`${data.mesaj} (Sepette: ${data.sepetteki_adet} adet)`);
+                    if (data.hata) {
+                        bildirimGoster(`⚠️ ${data.hata}`, 'bg-danger');
+                    } else {
+                        bildirimGoster(`${data.mesaj} (Sepette: ${data.sepetteki_adet} adet)`, 'bg-success');
+                    }
                 })
                 .catch(error => console.error('Hata:', error));
         });

@@ -54,7 +54,7 @@
                     <span class="fs-5 text-muted">Genel Toplam:</span>
                     <span class="text-success fw-bold fs-4">{{ genel_toplam }} ₺</span>
                 </div>
-                <button class="btn btn-antep w-100 btn-lg siparisi-tamamla-btn fw-bold">
+                <button type="button" class="btn btn-antep w-100 btn-lg fw-bold" data-bs-toggle="modal" data-bs-target="#odemeModal">
                     Siparişi Tamamla
                 </button>
             </div>
@@ -68,6 +68,45 @@
     <a href="/" class="btn btn-antep mt-3">Alışverişe Başla</a>
 </div>
 {% endif %}
+
+<!-- Ödeme ve Adres Modalı -->
+<div class="modal fade" id="odemeModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header bg-success text-white border-0">
+        <h5 class="modal-title fw-bold">💳 Güvenli Ödeme ve Teslimat</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body p-4">
+        <form id="odemeFormu">
+            <h6 class="fw-bold text-secondary mb-3">📍 Teslimat Adresi</h6>
+            <div class="mb-4">
+                <textarea class="form-control" id="teslimatAdresi" rows="3" placeholder="Açık adresinizi giriniz..." required></textarea>            </div>
+            
+            <h6 class="fw-bold text-secondary mb-3">💳 Kart Bilgileri (Simülasyon)</h6>
+            <div class="row g-3">
+                <div class="col-12">
+                    <input type="text" class="form-control" placeholder="Kart Üzerindeki İsim" required>
+                </div>
+                <div class="col-12">
+                    <input type="text" class="form-control" placeholder="Kart Numarası (Örn: 4543 **** **** ****)" required>
+                </div>
+                <div class="col-6">
+                    <input type="text" class="form-control" placeholder="Ay/Yıl (MM/YY)" required>
+                </div>
+                <div class="col-6">
+                    <input type="text" class="form-control" placeholder="CVV" required>
+                </div>
+            </div>
+        </form>
+      </div>
+      <div class="modal-footer border-0 d-flex justify-content-between p-4 bg-light">
+        <span class="fs-5 text-muted">Ödenecek Tutar: <strong class="text-success">{{ genel_toplam }} ₺</strong></span>
+        <button type="button" class="btn btn-success px-5 fw-bold btn-lg" id="odemeYapBtn">Ödemeyi Tamamla</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- Silme Onay Modalı (Düzenin dışına, en alta alındı) -->
 <div class="modal fade" id="silOnayModal" tabindex="-1" aria-hidden="true">
@@ -124,22 +163,57 @@
             .catch(error => console.error('Hata:', error));
     });
 
-    // 2. Siparişi Tamamlama İşlemi (Transaction atomic yapımızı tetikler)
-    const tamamlaBtn = document.querySelector('.siparisi-tamamla-btn');
-    if (tamamlaBtn) {
-        tamamlaBtn.addEventListener('click', function() {
-            fetch('/sepet/tamamla/')
+    // 2. Ödeme Formunu Doğrulama ve Siparişi Tamamlama
+    const odemeYapBtn = document.getElementById('odemeYapBtn');
+    if (odemeYapBtn) {
+        odemeYapBtn.addEventListener('click', function() {
+            const form = document.getElementById('odemeFormu');
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+
+            this.disabled = true;
+            this.innerHTML = '⏳ İşleniyor...';
+
+            const teslimatAdresi = document.getElementById('teslimatAdresi').value;
+
+            fetch('/sepet/tamamla/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({
+                    teslimat_adresi: teslimatAdresi
+                })
+            })
                 .then(response => response.json())
                 .then(data => {
                     if (data.odenen_tutar) {
-                        alert(data.mesaj + "\nÖdenen Tutar: " + data.odenen_tutar + " ₺");
-                        window.location.href = '/'; // İşlem bitince ana sayfaya dön
+                        const odemeModal = bootstrap.Modal.getInstance(document.getElementById('odemeModal'));
+                        odemeModal.hide();
+                        
+                        if (typeof bildirimGoster === 'function') {
+                            bildirimGoster(`✅ ${data.mesaj} (Takip No: ${data.takip_no})`, 'bg-success');
+                            setTimeout(() => { window.location.href = '/sepet/siparislerim/'; }, 2000);
+                        } else {
+                            window.location.href = '/sepet/siparislerim/'; 
+                        }
                     } else {
-                        alert(data.hata);
+                        if (typeof bildirimGoster === 'function') {
+                            bildirimGoster(`❌ ${data.hata}`, 'bg-danger');
+                        }
+                        this.disabled = false;
+                        this.innerHTML = 'Ödemeyi Tamamla';
                     }
                 })
-                .catch(error => console.error('Hata:', error));
-        });
+                .catch(error => {
+                    console.error('Hata:', error);
+                    this.disabled = false;
+                    this.innerHTML = 'Ödemeyi Tamamla';
+                });  
+            });
     }
 </script>
 {% endblock %}

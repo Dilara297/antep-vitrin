@@ -22,12 +22,12 @@
             <div class="d-flex align-items-center">
                 {% if user.is_authenticated %}
                     <span class="me-3 fw-bold text-secondary">👤 {{ user.username }}</span>
-                    <a href="/sepet/detay/" class="btn btn-antep fw-bold me-2">🛒 Sepetim</a>
+                    <a href="{% url 'siparislerim' %}" class="btn btn-outline-dark fw-bold me-2 btn-sm">📦 Siparişlerim</a>
+                    <a href="/sepet/detay/" class="btn btn-antep fw-bold me-2 btn-sm">🛒 Sepetim</a>
                     <a href="{% url 'cikis_yap' %}" class="btn btn-outline-danger fw-bold btn-sm">Çıkış</a>
                 {% else %}
                     <a href="{% url 'giris_yap' %}" class="btn btn-outline-secondary fw-bold me-2 btn-sm">Giriş Yap</a>
-                    <a href="{% url 'kayit_ol' %}" class="btn btn-secondary fw-bold me-3 btn-sm">Kayıt Ol</a>
-                    <a href="/sepet/detay/" class="btn btn-antep fw-bold">🛒 Sepetim</a>
+                    <a href="{% url 'kayit_ol' %}" class="btn btn-antep fw-bold btn-sm">Kayıt Ol</a>
                 {% endif %}
             </div>
                 </a>

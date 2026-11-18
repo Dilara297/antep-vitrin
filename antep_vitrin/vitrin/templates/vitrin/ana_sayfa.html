@@ -60,8 +60,11 @@
             fetch(`/sepet/ekle/${urunId}/`)
                 .then(response => response.json())
                 .then(data => {
-                    // Backend'den gelen JSON mesajını kullanıcıya göster
-                    bildirimGoster(`${data.mesaj} (Sepette: ${data.sepetteki_adet} adet)`);
+                    if (data.hata) {
+                        bildirimGoster(`⚠️ ${data.hata}`, 'bg-danger');
+                    } else {
+                        bildirimGoster(`${data.mesaj} (Sepette: ${data.sepetteki_adet} adet)`, 'bg-success');
+                    }
                 })
                 .catch(error => console.error('Hata:', error));
         });

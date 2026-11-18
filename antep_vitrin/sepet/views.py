@@ -1,26 +1,19 @@
+import json
+import random
 from django.http import JsonResponse
-from django.shortcuts import get_object_or_404
-from vitrin.models import Urun
-from .models import Sepet, SepetUrunu
+from django.shortcuts import render, get_object_or_404
 from django.db import transaction
-from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
+from vitrin.models import Urun
+from .models import Sepet, SepetUrunu, Siparis, SiparisUrunu
 
 def sepete_ekle(request, urun_id):
-    # 1. Hangi yöresel ürün eklenecek buluyoruz
+    if not request.user.is_authenticated:
+        return JsonResponse({'hata': 'Sepete ürün eklemek için önce giriş yapmalısınız.'}, status=401)
+
     urun = get_object_or_404(Urun, id=urun_id)
+    sepet, _ = Sepet.objects.get_or_create(user=request.user)
     
-    # 2. Sepeti bul veya oluştur (Kullanıcı giriş yaptıysa user, yapmadıysa session_id ile)
-    if request.user.is_authenticated:
-        sepet, created = Sepet.objects.get_or_create(user=request.user)
-    else:
-        # Tarayıcıda henüz bir session (oturum) yoksa, hemen bir tane başlatıyoruz
-        if not request.session.session_key:
-            request.session.create()
-        session_id = request.session.session_key
-        # user=None şartını koyuyoruz ki başkasının sepetiyle karışmasın
-        sepet, created = Sepet.objects.get_or_create(session_id=session_id, user=None)
-        
-    # 3. Ürünü sepete ekle. Zaten varsa sadece adedini 1 artır.
     sepet_urunu, created = SepetUrunu.objects.get_or_create(sepet=sepet, urun=urun)
     if not created:
         sepet_urunu.adet += 1
@@ -30,13 +23,10 @@ def sepete_ekle(request, urun_id):
         'mesaj': f'{urun.isim} sepete eklendi.',
         'sepetteki_adet': sepet_urunu.adet
     })
-    
+
+@login_required(login_url='giris_yap')
 def sepet_detay(request):
-    if request.user.is_authenticated:
-        sepet = Sepet.objects.filter(user=request.user).first()
-    else:
-        session_id = request.session.session_key
-        sepet = Sepet.objects.filter(session_id=session_id, user=None).first()
+    sepet = Sepet.objects.filter(user=request.user).first()
         
     if not sepet or not sepet.urunler.exists():
         return render(request, 'sepet/sepet_detay.html', {'urunler': [], 'genel_toplam': 0})
@@ -49,7 +39,7 @@ def sepet_detay(request):
         genel_toplam += kalem_toplam
         
         urunler_listesi.append({
-            'id': kalem.urun.id, # Silme işlemi için ID gerekli
+            'id': kalem.urun.id,
             'urun_ismi': kalem.urun.isim,
             'adet': kalem.adet,
             'birim_fiyat': kalem.urun.fiyat,
@@ -57,30 +47,23 @@ def sepet_detay(request):
             'gorsel_url': kalem.urun.gorsel.url if kalem.urun.gorsel else None
         })
         
-    context = {
+    return render(request, 'sepet/sepet_detay.html', {
         'urunler': urunler_listesi,
         'genel_toplam': genel_toplam
-    }
-    return render(request, 'sepet/sepet_detay.html', context)
-    
+    })
+
 def sepetten_cikar(request, urun_id):
-    # 1. Sepeti bul (Giriş yapan veya misafir)
-    if request.user.is_authenticated:
-        sepet = Sepet.objects.filter(user=request.user).first()
-    else:
-        session_id = request.session.session_key
-        sepet = Sepet.objects.filter(session_id=session_id, user=None).first()
-        
+    if not request.user.is_authenticated:
+        return JsonResponse({'hata': 'Bu işlem için giriş yapmalısınız.'}, status=401)
+
+    sepet = Sepet.objects.filter(user=request.user).first()
     if not sepet:
         return JsonResponse({'hata': 'Sepet bulunamadı.'}, status=404)
         
-    # 2. Sepetten çıkarılmak istenen ürünü bul
     sepet_urunu = SepetUrunu.objects.filter(sepet=sepet, urun_id=urun_id).first()
-    
     if not sepet_urunu:
         return JsonResponse({'hata': 'Bu ürün sepetinizde yok.'}, status=404)
         
-    # 3. Kritik Karar: Adet 1'den büyükse sadece eksilt, 1 ise satırı tamamen sil
     if sepet_urunu.adet > 1:
         sepet_urunu.adet -= 1
         sepet_urunu.save()
@@ -92,32 +75,55 @@ def sepetten_cikar(request, urun_id):
     return JsonResponse({'mesaj': mesaj})
 
 def siparisi_tamamla(request):
-    # 1. Sepeti bul
-    if request.user.is_authenticated:
-        sepet = Sepet.objects.filter(user=request.user).first()
-    else:
-        session_id = request.session.session_key
-        sepet = Sepet.objects.filter(session_id=session_id, user=None).first()
-        
+    if not request.user.is_authenticated:
+        return JsonResponse({'hata': 'Sipariş vermek için giriş yapmalısınız.'}, status=401)
+
+    sepet = Sepet.objects.filter(user=request.user).first()
     if not sepet or not sepet.urunler.exists():
         return JsonResponse({'hata': 'Sepetiniz boş, sipariş verilemez.'}, status=400)
-        
+
+    teslimat_adresi = ""
+    if request.method == 'POST':
+        try:
+            veri = json.loads(request.body)
+            teslimat_adresi = veri.get('teslimat_adresi', '')
+        except json.JSONDecodeError:
+            pass
+
     try:
-        # transaction.atomic() ile işlemleri mühürlüyoruz. 
-        # Hata çıkarsa her şey geri alınır (Rollback).
         with transaction.atomic():
+            takip_no = f"TR{random.randint(10000000, 99999999)}"
+            siparis = Siparis.objects.create(
+                user=request.user,
+                teslimat_adresi=teslimat_adresi,
+                kargo_takip_no=takip_no
+            )
+
             genel_toplam = 0
-            
             for kalem in sepet.urunler.all():
-                genel_toplam += kalem.toplam_fiyat_getir()
+                kalem_toplam = kalem.toplam_fiyat_getir()
+                genel_toplam += kalem_toplam
                 
-            # Sipariş başarıyla alındığı için kullanıcının sepetindeki kalemleri siliyoruz
+                SiparisUrunu.objects.create(
+                    siparis=siparis,
+                    urun=kalem.urun,
+                    adet=kalem.adet,
+                    birim_fiyat=kalem.urun.fiyat
+                )
+                
+            siparis.odenen_tutar = genel_toplam
+            siparis.save()
             sepet.urunler.all().delete()
             
         return JsonResponse({
-            'mesaj': 'Siparişiniz başarıyla alındı. Afiyet olsun!',
-            'odenen_tutar': genel_toplam
+            'mesaj': f'Sipariş #{siparis.id} başarıyla alındı.',
+            'odenen_tutar': genel_toplam,
+            'takip_no': takip_no
         })
-        
     except Exception as e:
         return JsonResponse({'hata': f'Sipariş sırasında kritik bir hata oluştu: {str(e)}'}, status=500)
+
+@login_required(login_url='giris_yap')
+def siparislerim(request):
+    siparisler = Siparis.objects.filter(user=request.user).order_by('-olusturulma_tarihi')
+    return render(request, 'sepet/siparislerim.html', {'siparisler': siparisler})
