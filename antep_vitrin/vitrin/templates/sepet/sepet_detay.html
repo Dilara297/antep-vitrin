@@ -31,12 +31,17 @@
                                 {{ urun.urun_ismi }}
                             </td>
                             <td class="text-muted">{{ urun.birim_fiyat }} ₺</td>
-                            <td><span class="badge bg-secondary px-3 py-2 fs-6">{{ urun.adet }}</span></td>
+                            <td>
+                                <div class="d-inline-flex align-items-center gap-2">
+                                    <button class="btn btn-sm btn-outline-secondary fw-bold adet-azalt-btn" data-urun-id="{{ urun.id }}" type="button">−</button>
+                                    <span class="badge bg-secondary px-3 py-2 fs-6">{{ urun.adet }}</span>
+                                    <button class="btn btn-sm btn-outline-secondary fw-bold adet-artir-btn" data-urun-id="{{ urun.id }}" type="button">+</button>
+                                </div>
+                            </td>
                             <td class="text-success fw-bold">{{ urun.kalem_toplam }} ₺</td>
                             <td>
-                                <!-- Sil butonuna ürün ID'sini gömüyoruz -->
                                 <button class="btn btn-sm btn-outline-danger sepetten-cikar-btn" data-urun-id="{{ urun.id }}">
-                                    Sil / Azalt
+                                    Sil 
                                 </button>
                             </td>
                         </tr>
@@ -83,8 +88,12 @@
         <form id="odemeFormu">
             <h6 class="fw-bold text-secondary mb-3">📍 Teslimat Adresi</h6>
             <div class="mb-4">
-                <textarea class="form-control" id="teslimatAdresi" rows="3" placeholder="Açık adresinizi giriniz..." required>{{ kayitli_adres }}</textarea>            
+                <textarea class="form-control" id="teslimatAdresi" rows="3" placeholder="Açık adresinizi giriniz..." required>{{ kayitli_adres }}</textarea>
+            </div>
             <h6 class="fw-bold text-secondary mb-3">💳 Kart Bilgileri (Simülasyon)</h6>
+            <div class="alert alert-warning py-2 small mb-3">
+                <strong>Dikkat:</strong> Test amaçlıdır, gerçek kart bilgisi girmeyiniz. (Örn: <code>4543 0000 0000 0000</code> • <code>12/28</code> • <code>123</code>)
+            </div>
             <div class="row g-3">
                 <div class="col-12">
                     <input type="text" id="kartIsim" class="form-control" placeholder="Kart Üzerindeki İsim" pattern="[A-Za-zÇĞİÖŞÜçğıöşü\s]{3,}" title="Sadece harf giriniz (en az 3 karakter)" required>
@@ -109,7 +118,7 @@
   </div>
 </div>
 
-<!-- Silme Onay Modalı (Düzenin dışına, en alta alındı) -->
+<!-- Silme Onay Modalı -->
 <div class="modal fade" id="silOnayModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content border-0 shadow">
@@ -118,7 +127,7 @@
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Kapat"></button>
       </div>
       <div class="modal-body fs-5 py-4 text-center text-secondary">
-        Bu ürünü sepetten çıkarmak veya adedini azaltmak istediğinize emin misiniz?
+        Bu ürünü sepetten çıkarmak istediğinize emin misiniz?
       </div>
       <div class="modal-footer border-0 d-flex justify-content-center pb-4">
         <button type="button" class="btn btn-outline-secondary px-4" data-bs-dismiss="modal">İptal</button>
@@ -162,13 +171,33 @@
             e.target.value = e.target.value.replace(/[^A-Za-zÇĞİÖŞÜçğıöşü\s]/g, '');
         });
     }
+
+    // Hızlı Adet Artırma (+)
+    document.querySelectorAll('.adet-artir-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const urunId = this.getAttribute('data-urun-id');
+            fetch(`/sepet/ekle/${urunId}/`)
+                .then(response => response.json())
+                .then(data => window.location.reload())
+                .catch(error => console.error('Hata:', error));
+        });
+    });
+
+    // Hızlı Adet Azaltma (-)
+    document.querySelectorAll('.adet-azalt-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const urunId = this.getAttribute('data-urun-id');
+            fetch(`/sepet/cikar/${urunId}/`)
+                .then(response => response.json())
+                .then(data => window.location.reload())
+                .catch(error => console.error('Hata:', error));
+        });
+    });
+
     // 1. Ürün Silme / Azaltma İşlemi (Modal ile)
     let silinecekUrunId = null;
-    
-    // Sayfa yüklendiğinde Modal'ı tanımla
     const silOnayModal = new bootstrap.Modal(document.getElementById('silOnayModal'));
 
-    // Sil butonuna basıldığında sadece Modalı aç ve ID'yi hafızaya al
     document.querySelectorAll('.sepetten-cikar-btn').forEach(button => {
         button.addEventListener('click', function() {
             silinecekUrunId = this.getAttribute('data-urun-id');
@@ -176,18 +205,16 @@
         });
     });
 
-    // Modal içindeki Kırmızı "Evet, Çıkar" butonuna basıldığında asıl API isteğini at
     document.getElementById('modalOnayBtn').addEventListener('click', function() {
         if (!silinecekUrunId) return;
-        
-        silOnayModal.hide(); // Modalı kapat
+        silOnayModal.hide();
 
-        fetch(`/sepet/cikar/${silinecekUrunId}/`)
+        fetch(`/sepet/cikar/${silinecekUrunId}/?tumu=1`)
             .then(response => response.json())
             .then(data => {
                 if (typeof bildirimGoster === 'function') {
                     bildirimGoster(data.mesaj, 'bg-danger');
-                    setTimeout(() => { window.location.reload(); }, 1500);
+                    setTimeout(() => { window.location.reload(); }, 1000);
                 } else {
                     window.location.reload();
                 }
@@ -245,7 +272,7 @@
                     this.disabled = false;
                     this.innerHTML = 'Ödemeyi Tamamla';
                 });  
-            });
+        });
     }
 </script>
 {% endblock %}

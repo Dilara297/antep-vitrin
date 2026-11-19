@@ -72,13 +72,16 @@ def sepetten_cikar(request, urun_id):
     if not sepet_urunu:
         return JsonResponse({'hata': 'Bu ürün sepetinizde yok.'}, status=404)
         
-    if sepet_urunu.adet > 1:
+    tumu = request.GET.get('tumu')
+
+    if tumu == '1' or sepet_urunu.adet <= 1:
+        urun_ismi = sepet_urunu.urun.isim
+        sepet_urunu.delete()
+        mesaj = f'{urun_ismi} sepetten tamamen çıkarıldı.'
+    else:
         sepet_urunu.adet -= 1
         sepet_urunu.save()
         mesaj = f'{sepet_urunu.urun.isim} adedi 1 azaltıldı. Kalan adet: {sepet_urunu.adet}'
-    else:
-        sepet_urunu.delete()
-        mesaj = f'{sepet_urunu.urun.isim} sepetten tamamen çıkarıldı.'
         
     return JsonResponse({'mesaj': mesaj})
 

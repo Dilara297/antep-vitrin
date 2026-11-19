@@ -1,36 +1,62 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="row mt-4">
-    <div class="col-md-6 mb-4">
-        {% if urun.gorsel %}
-        <img src="{{ urun.gorsel.url }}" class="img-fluid rounded shadow-sm w-100" style="max-height: 500px; object-fit: cover;" alt="{{ urun.isim }}">
-        {% endif %}
-    </div>
-    <div class="col-md-6">
-        <nav aria-label="breadcrumb">
-          <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="/" class="text-decoration-none text-muted">Ana Sayfa</a></li>
-            <li class="breadcrumb-item"><a href="#" class="text-decoration-none text-muted">{{ urun.kategori.isim }}</a></li>
-            <li class="breadcrumb-item active" aria-current="page">{{ urun.isim }}</li>
-          </ol>
-        </nav>
-        
-        <h2 class="fw-bold">{{ urun.isim }}</h2>
-        <h3 class="text-success fw-bold mb-4">{{ urun.fiyat }} ₺</h3>
-        
-        <div class="mb-4">
-            <h5>Ürün Hakkında</h5>
-            <!-- Admin panelinden girilen açıklama satır atlamalarıyla görünsün diye linebreaks filtresi kullandık -->
-            <p class="text-secondary">{{ urun.aciklama|linebreaks }}</p> 
+<div class="card border-0 shadow-sm p-4 my-4">
+    <div class="row align-items-center g-4">
+        <div class="col-md-6">
+            {% if urun.gorsel %}
+            <img src="{{ urun.gorsel.url }}" class="img-fluid rounded shadow-sm w-100" style="max-height: 480px; object-fit: cover;" alt="{{ urun.isim }}">
+            {% endif %}
         </div>
-        
-        <div class="d-grid gap-2 d-md-flex mt-4">
-            <!-- Butona data-urun-id ve sepete-ekle-btn sınıfını ekledik, rengini temaya uyarladık -->
-            <button class="btn btn-antep btn-lg px-4 sepete-ekle-btn" data-urun-id="{{ urun.id }}" type="button">
-                🛒 Sepete Ekle
-            </button>
-            <a href="/" class="btn btn-outline-secondary btn-lg px-4">Geri Dön</a>
+        <div class="col-md-6">
+            <nav aria-label="breadcrumb">
+              <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="/" class="text-decoration-none text-muted">Ana Sayfa</a></li>
+                <li class="breadcrumb-item"><a href="/?kategori={{ urun.kategori.id }}" class="text-decoration-none text-muted">{{ urun.kategori.isim }}</a></li>
+                <li class="breadcrumb-item active" aria-current="page">{{ urun.isim }}</li>
+              </ol>
+            </nav>
+            
+            <h2 class="fw-bold">{{ urun.isim }}</h2>
+            <h3 class="text-success fw-bold mb-4">{{ urun.fiyat }} ₺</h3>
+            
+            <div class="mb-4">
+                <h5 class="fw-bold">Ürün Hakkında</h5>
+                <p class="text-secondary">{{ urun.aciklama|linebreaks }}</p> 
+            </div>
+            
+            <div class="d-grid gap-2 d-md-flex mt-4">
+                <button class="btn btn-antep btn-lg px-4 sepete-ekle-btn" data-urun-id="{{ urun.id }}" type="button">
+                    🛒 Sepete Ekle
+                </button>
+                <a href="/" class="btn btn-outline-secondary btn-lg px-4">Geri Dön</a>
+            </div>
+
+            <hr class="my-4">
+
+            <div class="row g-2 text-center small text-muted">
+                <div class="col-4">
+                    <div class="border rounded p-2 bg-light">
+                        <div class="fs-5">🚚</div>
+                        <div class="fw-bold text-dark">Hızlı Kargo</div>
+                        <div>Aynı gün çıkış</div>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="border rounded p-2 bg-light">
+                        <div class="fs-5">🌿</div>
+                        <div class="fw-bold text-dark">%100 Yöresel</div>
+                        <div>Gaziantep üretimi</div>
+                    </div>
+                </div>
+                <div class="col-4">
+                    <div class="border rounded p-2 bg-light">
+                        <div class="fs-5">🔒</div>
+                        <div class="fw-bold text-dark">Test Ödeme</div>
+                        <div>Simülasyon akışı</div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -41,7 +67,7 @@
         button.addEventListener('click', function() {
             const urunId = this.getAttribute('data-urun-id');
             
-           fetch(`/sepet/ekle/${urunId}/`)
+            fetch(`/sepet/ekle/${urunId}/`)
                 .then(response => response.json())
                 .then(data => {
                     if (data.hata) {
