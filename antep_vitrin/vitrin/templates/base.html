@@ -24,8 +24,15 @@
             <!-- Dinamik Kullanıcı Menüsü ve Sepet -->
             <div class="d-flex align-items-center">
                 {% if user.is_authenticated %}
-                    <a href="{% url 'profil' %}" class="me-3 fw-bold text-secondary text-decoration-none">👤 {{ user.username }}</a>                    <a href="{% url 'siparislerim' %}" class="btn btn-outline-dark fw-bold me-2 btn-sm">📦 Siparişlerim</a>
-                    <a href="/sepet/detay/" class="btn btn-antep fw-bold me-2 btn-sm">🛒 Sepetim</a>
+                    <a href="{% url 'profil' %}" class="me-3 fw-bold text-secondary text-decoration-none">👤 {{ user.username }}</a>                  
+                    <a href="/sepet/siparislerim/" 
+                        class="btn {% if '/siparislerim' in request.path %}btn-antep text-white{% else %}btn-outline-dark{% endif %} btn-sm fw-bold">
+                        📦 Siparişlerim
+                    </a>
+                    <a href="/sepet/detay/" 
+                        class="btn {% if '/sepet/detay' in request.path %}btn-antep text-white{% else %}btn-outline-dark{% endif %} btn-sm fw-bold">
+                        🛒 Sepetim
+                    </a>
                     <a href="{% url 'cikis_yap' %}" class="btn btn-outline-danger fw-bold btn-sm">Çıkış</a>
                 {% else %}
                     <a href="{% url 'giris_yap' %}" class="btn btn-outline-secondary fw-bold me-2 btn-sm">Giriş Yap</a>
